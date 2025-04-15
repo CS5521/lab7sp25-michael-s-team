@@ -358,7 +358,7 @@ scheduler(void)
     int total_tickets = 0;
     for(p = ptable.proc; p < &ptable.proc[NPROC]; p++)
     {
-      if(p->state != RUNNABLE)
+      if(p->state == RUNNABLE)
         total_tickets += p->tickets;
     }
     // check if total_tickets is 0
@@ -370,33 +370,53 @@ scheduler(void)
       continue;
     }
 
+    // init the winning ticket
+    // the current number of tickets
+    // and the selected process to run
     int winning_ticket = random() % total_tickets;
     int current_tickets = 0;
     struct proc * selected = 0;
     
+    // for every process in the table
+    // check if its runnable, if so increase
+    // the total tickets
+    // check if the winning ticket is less than or equal 
+    // to the current number of tickets
+    // then set p as the selected process
     for (p = ptable.proc; p < &ptable.proc[NPROC]; p++)
     {
-      if (p->state != RUNNABLE)
+      if (p->state == RUNNABLE)
       {
-        continue;
+        current_tickets += p->tickets;
       }
 
-      current_tickets += p->tickets;
-      if (current_tickets > winning_ticket)
+      if (current_tickets >= winning_ticket)
       {
         selected = p;
         break;
       }
     }
   
+    // for the selected process
     if (selected)
     {
+      // set the cpu proc to 
+      // selected and switch
+      // to virtual memory
+      // then set the state to running
       c->proc = selected;
       switchuvm(selected);
       selected->state = RUNNING;
-       
+
+      // Increment the ticks
       selected->ticks++;
-   
+
+      // save the current state 
+      // and switch to selected
+      // then switch back to the 
+      // kernal's vm
+      // then set the cpu process
+      // to nothing
       swtch(&(c->scheduler), selected->context);
       switchkvm();
       c->proc = 0;
