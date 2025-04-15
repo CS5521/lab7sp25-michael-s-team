@@ -6,6 +6,7 @@
 #include "x86.h"
 #include "proc.h"
 #include "spinlock.h"
+#include "pstat.h"
 
 struct {
   struct spinlock lock;
@@ -17,7 +18,7 @@ static struct proc *initproc;
 int nextpid = 1;
 extern void forkret(void);
 extern void trapret(void);
-
+extern void fillpstat(pstatTable *);
 static void wakeup1(void *chan);
 
 void
@@ -142,6 +143,10 @@ userinit(void)
   safestrcpy(p->name, "initcode", sizeof(p->name));
   p->cwd = namei("/");
 
+  // initialize the ticks and tickets
+  p->ticks = 0;
+  p->tickets = 10;
+
   // this assignment to p->state lets other cores
   // run this process. the acquire forces the above
   // writes to be visible, and the lock is also needed
@@ -215,6 +220,17 @@ fork(void)
   acquire(&ptable.lock);
 
   np->state = RUNNABLE;
+  
+  // set the tick and tickets
+  np->ticks = 0;
+  if (curproc->tickets > 10)
+  {
+    np->tickets = curproc->tickets;
+  }
+  else
+  {
+    np->tickets = 10;
+  }
 
   release(&ptable.lock);
 
@@ -494,6 +510,52 @@ kill(int pid)
   }
   release(&ptable.lock);
   return -1;
+}
+
+// Fill the pstatTable object
+//
+//
+void
+fillpstat(pstatTable * pstat)
+{
+  struct proc * p;
+  int i = 0;
+  
+  for (p = ptable.proc; p < &ptable.proc[NPROC]; p++, i++)
+  {
+    if (i >= NPROC)
+    {
+      break;
+    }
+
+    if (p->state == UNUSED)
+    {
+      (*pstat)[i].inuse = 0;
+    }
+    else
+    {
+      (*pstat)[i].inuse = 1;
+      (*pstat)[i].pid = p->pid;
+      (*pstat)[i].tickets = p->tickets;
+      (*pstat)[i].ticks = p->ticks;
+      safestrcpy((*pstat)[i].name, p->name, sizeof((*pstat)[i].name));
+      switch (p->state) 
+      {
+        case EMBRYO: (*pstat)[i].state = 'E'; 
+          break;
+        case RUNNING: (*pstat)[i].state = 'R'; 
+          break;
+        case RUNNABLE: (*pstat)[i].state = 'A';
+          break;
+        case SLEEPING: (*pstat)[i].state = 'S';
+          break;
+        case ZOMBIE: (*pstat)[i].state = 'Z';
+          break;
+        default: (*pstat)[i].state = '?';
+          break;
+      } 
+    }
+  }
 }
 
 //PAGEBREAK: 36
