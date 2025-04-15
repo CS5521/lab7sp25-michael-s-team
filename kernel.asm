@@ -11843,15 +11843,15 @@ sys_getpinfo(void)
 801065b1:	89 e5                	mov    %esp,%ebp
 801065b3:	83 ec 28             	sub    $0x28,%esp
   pstatTable * pstat;
-  if (argptr(0, (void*)&pstat, sizeof(pstatTable) < 0))
-801065b6:	c7 44 24 08 00 00 00 	movl   $0x0,0x8(%esp)
+  if (argptr(0, (void*)&pstat, sizeof(pstat)) < 0)
+801065b6:	c7 44 24 08 04 00 00 	movl   $0x4,0x8(%esp)
 801065bd:	00 
 801065be:	8d 45 f4             	lea    -0xc(%ebp),%eax
 801065c1:	89 44 24 04          	mov    %eax,0x4(%esp)
 801065c5:	c7 04 24 00 00 00 00 	movl   $0x0,(%esp)
 801065cc:	e8 cc ef ff ff       	call   8010559d <argptr>
 801065d1:	85 c0                	test   %eax,%eax
-801065d3:	74 07                	je     801065dc <sys_getpinfo+0x2c>
+801065d3:	79 07                	jns    801065dc <sys_getpinfo+0x2c>
   {
     return -1;
 801065d5:	b8 ff ff ff ff       	mov    $0xffffffff,%eax

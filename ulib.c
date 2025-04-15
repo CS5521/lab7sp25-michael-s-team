@@ -110,6 +110,7 @@ void
 ps(void)
 {
   pstatTable psinfo;
+  getpinfo(&psinfo);
   printf(1, "PID\tTKTS\tTCKS\tSTAT\tNAME\n");
   int i;
   for (i = 0; i < NPROC; i++)
