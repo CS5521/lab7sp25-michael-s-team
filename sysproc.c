@@ -107,14 +107,31 @@ sys_getpinfo(void)
 }
 
 int
-sys_setticket(void)
+sys_settickets(void)
 {
-  pstatTable * pstat;
-  if (argptr(0, (void*)&pstat, sizeof(pstat)) < 0)
+  int num;
+
+  if (argint(0, &num) < 0)
   {
     return -1;
   }
 
-  fillpstat(pstat);
+  // Is the number of tickets
+  // greater than 10
+  if (num < 10)
+  {
+    return -1;
+  }
+
+  // get the current process
+  struct proc * curr = myproc();
+
+  // does the current process exist
+  if (curr == 0)
+  {
+    return -1;
+  }
+
+  curr->tickets = num;
   return 0;
 }
