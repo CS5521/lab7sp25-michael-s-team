@@ -127,3 +127,37 @@ ps(void)
   }
 }
 
+int
+settickets(int num)
+{
+  // Is the number of tickets
+  // greater than 10
+  if (num < 10)
+  {
+    return -1;
+  }
+
+  // get the current process
+  struct proc * curr = myproc();
+
+  // does the current process exist
+  if (curr == 0)
+  {
+    return -1;
+  }
+
+  // is the current process in the 
+  // pstat table
+  // if so set the tickets and leave
+  int i;
+  for (i = 0; i < NPROC; i++)
+  {
+    if (pstat[i]->inuse && pstat[i]->pid == curr->pid)
+    {
+      curr->tickets = num;
+      return 0;
+    }
+  }
+  // otherwise return -1
+  return -1;
+}

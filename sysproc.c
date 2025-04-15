@@ -105,3 +105,16 @@ sys_getpinfo(void)
   fillpstat(pstat);
   return 0;
 }
+
+int
+sys_setticket(void)
+{
+  pstatTable * pstat;
+  if (argptr(0, (void*)&pstat, sizeof(pstat)) < 0)
+  {
+    return -1;
+  }
+
+  fillpstat(pstat);
+  return 0;
+}
