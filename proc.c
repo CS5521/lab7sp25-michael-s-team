@@ -8,6 +8,13 @@
 #include "spinlock.h"
 #include "pstat.h"
 
+#define RAND_MAX ((1U << 31) - 1)
+static int rseed = 1898888478;
+int random()
+{
+   return rseed = (rseed * 1103515245 + 12345) & RAND_MAX;
+}
+
 struct {
   struct spinlock lock;
   struct proc proc[NPROC];
@@ -346,28 +353,55 @@ scheduler(void)
     // Enable interrupts on this processor.
     sti();
 
-    // Loop over process table looking for process to run.
+    // Loop over process table looking for total tickets.
     acquire(&ptable.lock);
-    for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
+    int total_tickets = 0;
+    for(p = ptable.proc; p < &ptable.proc[NPROC]; p++)
+    {
       if(p->state != RUNNABLE)
+        total_tickets += p->tickets;
+    }
+    // check if total_tickets is 0
+    // if so, release the lock and
+    // continue
+    if (total_tickets == 0)
+    {
+      release(&ptable.lock);
+      continue;
+    }
+
+    int winning_ticket = random() % total_tickets;
+    int current_tickets = 0;
+    struct proc * selected = 0;
+    
+    for (p = ptable.proc; p < &ptable.proc[NPROC]; p++)
+    {
+      if (p->state != RUNNABLE)
+      {
         continue;
+      }
 
-      // Switch to chosen process.  It is the process's job
-      // to release ptable.lock and then reacquire it
-      // before jumping back to us.
-      c->proc = p;
-      switchuvm(p);
-      p->state = RUNNING;
-
-      swtch(&(c->scheduler), p->context);
+      current_tickets += p->tickets;
+      if (current_tickets > winning_ticket)
+      {
+        selected = p;
+        break;
+      }
+    }
+  
+    if (selected)
+    {
+      c->proc = selected;
+      switchuvm(selected);
+      selected->state = RUNNING;
+       
+      selected->ticks++;
+   
+      swtch(&(c->scheduler), selected->context);
       switchkvm();
-
-      // Process is done running for now.
-      // It should have changed its p->state before coming back.
       c->proc = 0;
     }
     release(&ptable.lock);
-
   }
 }
 
