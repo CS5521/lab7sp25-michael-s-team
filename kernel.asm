@@ -8696,14 +8696,19 @@ fillpstat(pstatTable * pstat)
 80104c30:	89 e5                	mov    %esp,%ebp
 80104c32:	53                   	push   %ebx
 80104c33:	83 ec 24             	sub    $0x24,%esp
+  // Make the p struct
   struct proc * p;
   int i = 0;
 80104c36:	c7 45 f0 00 00 00 00 	movl   $0x0,-0x10(%ebp)
   
+  // loop through each process in the table
   for (p = ptable.proc; p < &ptable.proc[NPROC]; p++, i++)
 80104c3d:	c7 45 f4 f4 3d 11 80 	movl   $0x80113df4,-0xc(%ebp)
 80104c44:	e9 94 01 00 00       	jmp    80104ddd <fillpstat+0x1ae>
   {
+    // if looped more 
+    // than NPROC
+    // break out of loop
     if (i >= NPROC)
 80104c49:	83 7d f0 3f          	cmpl   $0x3f,-0x10(%ebp)
 80104c4d:	7e 05                	jle    80104c54 <fillpstat+0x25>
@@ -8712,6 +8717,9 @@ fillpstat(pstatTable * pstat)
 80104c4f:	e9 96 01 00 00       	jmp    80104dea <fillpstat+0x1bb>
     }
 
+    // if p->state is unused
+    // than set the pstat at i 
+    // to in use
     if (p->state == UNUSED)
 80104c54:	8b 45 f4             	mov    -0xc(%ebp),%eax
 80104c57:	8b 40 0c             	mov    0xc(%eax),%eax
@@ -8728,7 +8736,9 @@ fillpstat(pstatTable * pstat)
 80104c6e:	01 c8                	add    %ecx,%eax
 80104c70:	c7 00 00 00 00 00    	movl   $0x0,(%eax)
 80104c76:	e9 57 01 00 00       	jmp    80104dd2 <fillpstat+0x1a3>
-    }
+    // otherwise
+    // fill all the important information
+    // into the pstat object
     else
     {
       (*pstat)[i].inuse = 1;

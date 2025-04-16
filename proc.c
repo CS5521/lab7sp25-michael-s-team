@@ -572,20 +572,31 @@ kill(int pid)
 void
 fillpstat(pstatTable * pstat)
 {
+  // Make the p struct
   struct proc * p;
   int i = 0;
   
+  // loop through each process in the table
   for (p = ptable.proc; p < &ptable.proc[NPROC]; p++, i++)
   {
+    // if looped more 
+    // than NPROC
+    // break out of loop
     if (i >= NPROC)
     {
       break;
     }
 
+    // if p->state is unused
+    // than set the pstat at i 
+    // to in use
     if (p->state == UNUSED)
     {
       (*pstat)[i].inuse = 0;
     }
+    // otherwise
+    // fill all the important information
+    // into the pstat object
     else
     {
       (*pstat)[i].inuse = 1;
